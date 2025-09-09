@@ -1,0 +1,26 @@
+# Example Autobox CLI Configuration
+# Copy this file to ~/.autobox/autobox.yaml or .autobox.yaml in your project directory
+
+docker:
+  host: unix:///var/run/docker.sock
+  api_version: "1.41"
+  tls_verify: false
+  image: autobox-engine:latest
+
+simulation:
+  default_image: autobox-engine:latest
+  default_config_path: /app/configs/simulation.json
+  default_metrics_path: /app/configs/metrics.json
+  default_volumes:
+    - ./configs:/app/configs
+    - ./logs:/app/logs
+  default_environment:
+    LOG_LEVEL: info
+    PYTHONUNBUFFERED: "1"
+  logs_directory: /tmp/autobox/logs
+  configs_directory: /tmp/autobox/configs
+
+output:
+  format: table  # Options: table, json, yaml
+  verbose: false
+  color: true
