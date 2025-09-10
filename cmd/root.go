@@ -50,7 +50,7 @@ func init() {
 }
 
 func addCommands() {
-	rootCmd.AddCommand(launchCmd)
+	rootCmd.AddCommand(runCmd)
 	rootCmd.AddCommand(statusCmd)
 	rootCmd.AddCommand(listCmd)
 	rootCmd.AddCommand(metricsCmd)

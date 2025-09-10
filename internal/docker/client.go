@@ -51,6 +51,7 @@ func (c *Client) LaunchSimulation(ctx context.Context, config models.SimulationC
 		Cmd: []string{
 			"--config", config.ConfigPath,
 			"--metrics", config.MetricsPath,
+			"--server", config.ServerPath,
 		},
 	}
 

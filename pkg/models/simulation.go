@@ -29,6 +29,7 @@ type Simulation struct {
 type SimulationConfig struct {
 	ConfigPath  string            `json:"config_path"`
 	MetricsPath string            `json:"metrics_path"`
+	ServerPath  string            `json:"server_path"`
 	Image       string            `json:"image"`
 	Environment map[string]string `json:"environment"`
 	Volumes     []string          `json:"volumes"`
