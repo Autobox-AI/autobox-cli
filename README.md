@@ -320,6 +320,16 @@ services:
 
 ## Development
 
+### Go Version Requirements
+
+This project uses **Go 1.24+** for local development to leverage the latest features and dependencies. However, note that:
+
+- **Local Development**: Requires Go 1.24.0 or higher
+- **CI/CD**: Currently runs tests on Go 1.21, 1.22, and 1.23 (GitHub Actions limitation)
+- **Linting**: Temporarily disabled in CI due to version mismatch; run `make lint` locally
+
+Some dependencies (like `golang.org/x/sys@v0.36.0`) require Go 1.24+, which is why the project targets this version.
+
 ### Building
 
 ```bash
