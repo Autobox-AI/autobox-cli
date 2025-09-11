@@ -20,7 +20,7 @@ var listCmd = &cobra.Command{
 	Use:   "list",
 	Short: "List all simulations",
 	Long: `List all Autobox simulations with their current status.
-	
+
 Examples:
   autobox list
   autobox list --all
@@ -78,7 +78,6 @@ func outputListTable(simulations []*models.Simulation) error {
 
 	fmt.Printf("\n%s Found %d simulation(s)\n\n", color.CyanString("▶"), len(simulations))
 
-	// Print header
 	fmt.Printf("%-12s  %-30s  %-12s  %-16s  %-12s\n", "ID", "NAME", "STATUS", "CREATED", "RUNNING FOR")
 	fmt.Println(strings.Repeat("-", 90))
 
@@ -91,7 +90,7 @@ func outputListTable(simulations []*models.Simulation) error {
 
 		statusStr := colorizeStatus(sim.Status)
 		idStr := color.CyanString(sim.ID)
-		
+
 		fmt.Printf("%-12s  %-30s  %-12s  %-16s  %-12s\n",
 			idStr,
 			truncate(sim.Name, 30),
@@ -101,7 +100,6 @@ func outputListTable(simulations []*models.Simulation) error {
 		)
 	}
 
-	// Summary
 	running := countByStatus(simulations, models.StatusRunning)
 	completed := countByStatus(simulations, models.StatusCompleted)
 	failed := countByStatus(simulations, models.StatusFailed)
@@ -120,7 +118,6 @@ func outputListTable(simulations []*models.Simulation) error {
 
 	return nil
 }
-
 
 func countByStatus(simulations []*models.Simulation, status models.SimulationStatus) int {
 	count := 0
@@ -147,11 +144,4 @@ func formatDuration(d time.Duration) string {
 		return fmt.Sprintf("%dm %ds", m, s)
 	}
 	return fmt.Sprintf("%ds", s)
-}
-
-func truncate(s string, max int) string {
-	if len(s) <= max {
-		return s
-	}
-	return s[:max-3] + "..."
 }

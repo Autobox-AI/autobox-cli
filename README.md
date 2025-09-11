@@ -4,7 +4,7 @@ A powerful command-line interface for managing Autobox AI simulation containers.
 
 ## Features
 
-- 🚀 **Launch** new simulations with custom configurations
+- 🚀 **Run** new simulations with custom configurations
 - 📊 **Monitor** simulation status and metrics in real-time
 - 📋 **List** all running simulations
 - 📈 **Collect metrics** including CPU, memory, network, and disk I/O
@@ -72,8 +72,8 @@ sudo mv autobox /usr/local/bin/
 cd ../autobox-engine
 docker build -t autobox-engine:latest .
 
-# 2. Launch your first simulation
-autobox launch --name "my-first-simulation"
+# 2. Run your first simulation
+autobox run --name "my-first-simulation"
 
 # 3. Check the status
 autobox status <container-id>
@@ -87,30 +87,32 @@ autobox list
 
 ## Usage
 
-### Launch a Simulation
+### Run a Simulation
 
 ```bash
-# Basic launch with defaults
-autobox launch
+# Basic run with defaults
+autobox run
 
-# Launch with custom configuration files
-autobox launch --config simulation.json --metrics metrics.json
+# Run with custom configuration files
+autobox run --config simulation.json --metrics metrics.json
 
-# Launch with custom image and environment variables
-autobox launch --image autobox-engine:v1.0 \
+# Run with custom image and environment variables
+autobox run --image autobox-engine:v1.0 \
   --env OPENAI_API_KEY=sk-... \
   --env LOG_LEVEL=debug \
   --name "my-simulation"
 
-# Launch with volume mounts for config and logs
-autobox launch \
+# Run with volume mounts for config and logs
+autobox run \
   --volume ./configs:/app/configs \
   --volume ./logs:/app/logs \
   --name "production-sim"
 
-# Launch in detached mode
-autobox launch --detach --name "background-sim"
+# Run in detached mode
+autobox run --detach --name "background-sim"
 ```
+
+**Note**: The simulation name displayed in `list` and `status` commands is now read from the simulation configuration file's `name` field, not the file path.
 
 ### List Simulations
 
@@ -133,17 +135,23 @@ Output example:
 ▶ Found 3 simulation(s)
 
 ID            NAME                            STATUS        CREATED           RUNNING FOR
-abc123def456  climate-model-v2                running       2024-01-15 14:30  2h 45m
-def456ghi789  market-analysis                 running       2024-01-15 16:15  1h 0m
-ghi789jkl012  recommendation-engine           completed     2024-01-15 12:00  -
+------------------------------------------------------------------------------------------
+abc123def456  Climate Model v2                running       2024-01-15 14:30  2h 45m
+def456ghi789  Market Analysis                 running       2024-01-15 16:15  1h 0m
+ghi789jkl012  Gift Choice                     completed     2024-01-15 12:00  -
 
 Summary: 2 running 1 completed
 ```
 
+**Note**: The NAME column shows the actual simulation name from the config file's `name` field, not the config file path.
+
 ### Check Simulation Status
 
 ```bash
-# Get detailed status
+# Interactive selection - shows list of running simulations to choose from
+autobox status
+
+# Get detailed status by ID
 autobox status abc123def456
 
 # Get status in JSON format for parsing
@@ -151,6 +159,16 @@ autobox status abc123def456 --output json
 
 # Verbose output with full configuration details
 autobox status abc123def456 -v
+```
+
+When no ID is provided, the status command presents an interactive menu:
+```
+▶ Select a running simulation:
+
+  [1] 32ca259fb21e Gift choice                    running (created: 2025-09-11 08:28)
+  [2] bc74ad805192 Test Simulation 2              running (created: 2025-09-11 08:35)
+
+→ Enter selection (1-2) or 'q' to quit:
 ```
 
 ### View Metrics
@@ -244,8 +262,8 @@ export AUTOBOX_OUTPUT_FORMAT=json
 ### Scripting and Automation
 
 ```bash
-# Launch simulation and capture ID
-SIM_ID=$(autobox launch --detach --output json | jq -r '.id')
+# Run simulation and capture ID
+SIM_ID=$(autobox run --detach --output json | jq -r '.id')
 
 # Wait for simulation to complete
 while [ "$(autobox status $SIM_ID --output json | jq -r '.status')" == "running" ]; do
@@ -266,7 +284,7 @@ autobox stop $SIM_ID
 # GitHub Actions example
 - name: Run Autobox Simulation
   run: |
-    autobox launch \
+    autobox run \
       --config ${{ github.workspace }}/simulation.json \
       --env GITHUB_SHA=${{ github.sha }} \
       --name "ci-test-${{ github.run_number }}"
@@ -332,7 +350,7 @@ make deps
 autobox-cli/
 ├── cmd/                    # Command implementations
 │   ├── root.go            # Root command and global flags
-│   ├── launch.go          # Launch simulation command
+│   ├── run.go             # Run simulation command
 │   ├── list.go            # List simulations command
 │   ├── status.go          # Status command
 │   ├── metrics.go         # Metrics command
@@ -363,23 +381,63 @@ autobox-cli/
 ### Testing
 
 ```bash
-# Run all tests
+# Run all tests using Makefile
+make test
+
+# Run tests with coverage report
+make test-coverage
+
+# Run all tests with Go directly
 go test ./...
 
 # Run tests with verbose output
 go test -v ./...
 
-# Run tests with coverage
+# Run tests with coverage percentage
 go test -cover ./...
 
+# Generate coverage report and open in browser
+go test -coverprofile=coverage.out ./...
+go tool cover -html=coverage.out
+
 # Run specific package tests
+go test ./cmd
 go test ./pkg/models
 go test ./internal/config
-go test ./cmd
+go test -v ./internal/docker  # verbose since it has no tests yet
+
+# Run a specific test function
+go test -v -run TestTruncate ./cmd
+go test -v -run TestInit ./internal/config
 
 # Run tests with race detection
 go test -race ./...
+
+# Run tests with timeout
+go test -timeout 30s ./...
+
+# Run benchmarks
+go test -bench=. ./...
+
+# Clean test cache and run tests
+go clean -testcache && go test ./...
 ```
+
+#### Test Structure
+
+The project includes tests for:
+- **cmd package**: Command utilities (truncate, formatDuration, formatBytes, etc.)
+- **internal/config**: Configuration management with Viper
+- **pkg/models**: Data model validation
+- **internal/docker**: Docker client operations (tests to be added)
+
+#### Writing Tests
+
+Tests follow Go conventions:
+- Test files are named `*_test.go`
+- Test functions start with `Test`
+- Use table-driven tests for multiple scenarios
+- Mock external dependencies (Docker client, file system, etc.)
 
 ### Contributing
 
@@ -449,7 +507,7 @@ The engine expects two configuration files:
 Example simulation.json:
 ```json
 {
-  "name": "market-analysis",
+  "name": "Market Analysis",
   "agents": [
     {
       "name": "data-collector",
@@ -516,7 +574,7 @@ docker build -t autobox-engine:latest .
 
 ```bash
 # Enable verbose output
-autobox -v launch
+autobox -v run
 
 # Check Docker connection
 docker ps
@@ -533,12 +591,12 @@ docker stats <container-id>
 
 - **Container Limits**: Set resource limits to prevent runaway simulations
   ```bash
-  autobox launch --env MEMORY_LIMIT=2g --env CPU_LIMIT=2
+  autobox run --env MEMORY_LIMIT=2g --env CPU_LIMIT=2
   ```
 
 - **Log Rotation**: Configure log rotation for long-running simulations
   ```bash
-  autobox launch --env LOG_MAX_SIZE=100m --env LOG_MAX_FILES=5
+  autobox run --env LOG_MAX_SIZE=100m --env LOG_MAX_FILES=5
   ```
 
 - **Monitoring**: Use the metrics command for real-time monitoring
@@ -552,18 +610,18 @@ docker stats <container-id>
 
 1. **Never commit secrets**: Use environment variables for sensitive data
    ```bash
-   autobox launch --env OPENAI_API_KEY=${OPENAI_API_KEY}
+   autobox run --env OPENAI_API_KEY=${OPENAI_API_KEY}
    ```
 
 2. **Use volume mounts carefully**: Only mount necessary directories
    ```bash
-   autobox launch --volume ./configs:/app/configs:ro  # read-only mount
+   autobox run --volume ./configs:/app/configs:ro  # read-only mount
    ```
 
 3. **Network isolation**: Run simulations in isolated networks
    ```bash
    docker network create autobox-net
-   autobox launch --env DOCKER_NETWORK=autobox-net
+   autobox run --env DOCKER_NETWORK=autobox-net
    ```
 
 4. **Regular updates**: Keep the CLI and engine updated

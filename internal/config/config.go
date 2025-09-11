@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/spf13/viper"
 )
@@ -56,6 +57,7 @@ func Init() error {
 	viper.AddConfigPath("/etc/autobox")
 
 	viper.SetEnvPrefix("AUTOBOX")
+	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 	viper.AutomaticEnv()
 
 	setDefaults()

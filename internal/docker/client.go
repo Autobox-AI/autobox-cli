@@ -40,7 +40,8 @@ func (c *Client) Close() error {
 func (c *Client) LaunchSimulation(ctx context.Context, config models.SimulationConfig) (*models.Simulation, error) {
 	labels := map[string]string{
 		fmt.Sprintf("%s.simulation", AutoboxLabelPrefix): "true",
-		fmt.Sprintf("%s.name", AutoboxLabelPrefix):       config.ConfigPath,
+		fmt.Sprintf("%s.name", AutoboxLabelPrefix):       config.Name,
+		fmt.Sprintf("%s.config_path", AutoboxLabelPrefix): config.ConfigPath,
 		fmt.Sprintf("%s.created_at", AutoboxLabelPrefix):  time.Now().Format(time.RFC3339),
 	}
 

@@ -18,3 +18,10 @@ func outputYAML(data interface{}) error {
 	encoder.SetIndent(2)
 	return encoder.Encode(data)
 }
+
+func truncate(s string, max int) string {
+	if len(s) <= max {
+		return s
+	}
+	return s[:max-3] + "..."
+}
