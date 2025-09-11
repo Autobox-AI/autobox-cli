@@ -10,9 +10,9 @@ import (
 )
 
 type Config struct {
-	Docker       DockerConfig       `mapstructure:"docker"`
-	Simulation   SimulationConfig   `mapstructure:"simulation"`
-	Output       OutputConfig       `mapstructure:"output"`
+	Docker     DockerConfig     `mapstructure:"docker"`
+	Simulation SimulationConfig `mapstructure:"simulation"`
+	Output     OutputConfig     `mapstructure:"output"`
 }
 
 type DockerConfig struct {
@@ -24,13 +24,13 @@ type DockerConfig struct {
 }
 
 type SimulationConfig struct {
-	DefaultImage      string            `mapstructure:"default_image"`
-	DefaultConfigPath string            `mapstructure:"default_config_path"`
-	DefaultMetricsPath string           `mapstructure:"default_metrics_path"`
-	DefaultVolumes    []string          `mapstructure:"default_volumes"`
+	DefaultImage       string            `mapstructure:"default_image"`
+	DefaultConfigPath  string            `mapstructure:"default_config_path"`
+	DefaultMetricsPath string            `mapstructure:"default_metrics_path"`
+	DefaultVolumes     []string          `mapstructure:"default_volumes"`
 	DefaultEnvironment map[string]string `mapstructure:"default_environment"`
-	LogsDirectory     string            `mapstructure:"logs_directory"`
-	ConfigsDirectory  string            `mapstructure:"configs_directory"`
+	LogsDirectory      string            `mapstructure:"logs_directory"`
+	ConfigDirectory    string            `mapstructure:"config_directory"`
 }
 
 type OutputConfig struct {
@@ -46,12 +46,12 @@ var (
 func Init() error {
 	viper.SetConfigName("autobox")
 	viper.SetConfigType("yaml")
-	
+
 	home, err := os.UserHomeDir()
 	if err != nil {
 		return fmt.Errorf("failed to get home directory: %w", err)
 	}
-	
+
 	viper.AddConfigPath(filepath.Join(home, ".autobox"))
 	viper.AddConfigPath(".")
 	viper.AddConfigPath("/etc/autobox")
@@ -84,17 +84,17 @@ func setDefaults() {
 
 	// Get home directory for default paths
 	home, _ := os.UserHomeDir()
-	defaultConfigsDir := filepath.Join(home, ".autobox", "configs")
-	
+	defaultConfigDir := filepath.Join(home, ".autobox", "config")
+
 	viper.SetDefault("simulation.default_image", "autobox-engine:latest")
-	viper.SetDefault("simulation.default_config_path", "/app/configs/simulation.json")
-	viper.SetDefault("simulation.default_metrics_path", "/app/configs/metrics.json")
+	viper.SetDefault("simulation.default_config_path", "/app/config/simulation.json")
+	viper.SetDefault("simulation.default_metrics_path", "/app/config/metrics.json")
 	viper.SetDefault("simulation.default_volumes", []string{
-		fmt.Sprintf("%s:/app/configs", defaultConfigsDir),
+		fmt.Sprintf("%s:/app/config", defaultConfigDir),
 	})
 	viper.SetDefault("simulation.default_environment", map[string]string{})
 	viper.SetDefault("simulation.logs_directory", filepath.Join(home, ".autobox", "logs"))
-	viper.SetDefault("simulation.configs_directory", defaultConfigsDir)
+	viper.SetDefault("simulation.config_directory", defaultConfigDir)
 
 	viper.SetDefault("output.format", "table")
 	viper.SetDefault("output.verbose", false)

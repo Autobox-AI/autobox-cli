@@ -9,16 +9,16 @@ docker:
 
 simulation:
   default_image: autobox-engine:latest
-  default_config_path: /app/configs/simulation.json
-  default_metrics_path: /app/configs/metrics.json
+  default_config_path: /app/config/simulation.json
+  default_metrics_path: /app/config/metrics.json
   default_volumes:
-    - ./configs:/app/configs
+    - ./config:/app/config
     - ./logs:/app/logs
   default_environment:
     LOG_LEVEL: info
     PYTHONUNBUFFERED: "1"
   logs_directory: /tmp/autobox/logs
-  configs_directory: /tmp/autobox/configs
+  config_directory: /tmp/autobox/config
 
 output:
   format: table  # Options: table, json, yaml

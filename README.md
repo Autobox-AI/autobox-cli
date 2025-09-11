@@ -108,7 +108,7 @@ autobox run --image autobox-engine:v1.0 \
 
 # Run with volume mounts for config and logs
 autobox run \
-  --volume ./configs:/app/configs \
+  --volume ./config:/app/config \
   --volume ./logs:/app/logs \
   --name "production-sim"
 
@@ -135,6 +135,7 @@ autobox list --output yaml
 ```
 
 Output example:
+
 ```
 ▶ Found 3 simulation(s)
 
@@ -166,6 +167,7 @@ autobox status abc123def456 -v
 ```
 
 When no ID is provided, the status command presents an interactive menu:
+
 ```
 ▶ Select a running simulation:
 
@@ -189,6 +191,7 @@ autobox metrics abc123def456 --output yaml
 ```
 
 Metrics include:
+
 - CPU usage percentage
 - Memory usage percentage
 - Network I/O (bytes received/transmitted)
@@ -238,14 +241,14 @@ docker:
 
 simulation:
   default_image: autobox-engine:latest
-  default_config_path: /app/configs/simulation.json
-  default_metrics_path: /app/configs/metrics.json
+  default_config_path: /app/config/simulation.json
+  default_metrics_path: /app/config/metrics.json
   default_volumes:
-    - ./configs:/app/configs
+    - ./config:/app/config
   default_environment:
     LOG_LEVEL: info
   logs_directory: /tmp/autobox/logs
-  configs_directory: /tmp/autobox/configs
+  config_directory: /tmp/autobox/config
 
 output:
   format: table
@@ -292,7 +295,7 @@ autobox stop $SIM_ID
       --config ${{ github.workspace }}/simulation.json \
       --env GITHUB_SHA=${{ github.sha }} \
       --name "ci-test-${{ github.run_number }}"
-    
+
 - name: Check Results
   run: |
     SIM_ID=$(autobox list --output json | jq -r '.[0].id')
@@ -312,7 +315,7 @@ services:
       com.autobox.simulation: "true"
       com.autobox.name: "docker-compose-sim"
     volumes:
-      - ./configs:/app/configs
+      - ./config:/app/config
       - ./logs:/app/logs
     environment:
       - OPENAI_API_KEY=${OPENAI_API_KEY}
@@ -440,6 +443,7 @@ go clean -testcache && go test ./...
 #### Test Structure
 
 The project includes tests for:
+
 - **cmd package**: Command utilities (truncate, formatDuration, formatBytes, etc.)
 - **internal/config**: Configuration management with Viper
 - **pkg/models**: Data model validation
@@ -448,6 +452,7 @@ The project includes tests for:
 #### Writing Tests
 
 Tests follow Go conventions:
+
 - Test files are named `*_test.go`
 - Test functions start with `Test`
 - Use table-driven tests for multiple scenarios
@@ -515,10 +520,12 @@ docker run --rm autobox-engine:latest --help
 ### Engine Configuration
 
 The engine expects two configuration files:
+
 - **simulation.json**: Defines the simulation parameters and agent behaviors
 - **metrics.json**: Configures metrics collection and reporting
 
 Example simulation.json:
+
 ```json
 {
   "name": "Market Analysis",
@@ -550,6 +557,7 @@ Example simulation.json:
 ### Common Issues
 
 #### Docker Connection Failed
+
 ```bash
 # Error: Cannot connect to Docker daemon
 # Solution: Ensure Docker is running
@@ -561,6 +569,7 @@ open -a Docker  # macOS
 ```
 
 #### Permission Denied
+
 ```bash
 # Error: permission denied while trying to connect to Docker
 # Solution: Add user to docker group (Linux)
@@ -569,6 +578,7 @@ newgrp docker
 ```
 
 #### Container Not Found
+
 ```bash
 # Error: container not found
 # Solution: Use the container ID from 'autobox list'
@@ -577,6 +587,7 @@ autobox status <correct-id>
 ```
 
 #### Image Not Found
+
 ```bash
 # Error: autobox-engine:latest not found
 # Solution: Build the engine image first
@@ -604,16 +615,19 @@ docker stats <container-id>
 ## Performance Considerations
 
 - **Container Limits**: Set resource limits to prevent runaway simulations
+
   ```bash
   autobox run --env MEMORY_LIMIT=2g --env CPU_LIMIT=2
   ```
 
 - **Log Rotation**: Configure log rotation for long-running simulations
+
   ```bash
   autobox run --env LOG_MAX_SIZE=100m --env LOG_MAX_FILES=5
   ```
 
 - **Monitoring**: Use the metrics command for real-time monitoring
+
   ```bash
   watch -n 5 'autobox metrics <container-id>'
   ```
@@ -623,22 +637,26 @@ docker stats <container-id>
 ### Best Practices
 
 1. **Never commit secrets**: Use environment variables for sensitive data
+
    ```bash
    autobox run --env OPENAI_API_KEY=${OPENAI_API_KEY}
    ```
 
 2. **Use volume mounts carefully**: Only mount necessary directories
+
    ```bash
-   autobox run --volume ./configs:/app/configs:ro  # read-only mount
+   autobox run --volume ./config:/app/config:ro  # read-only mount
    ```
 
 3. **Network isolation**: Run simulations in isolated networks
+
    ```bash
    docker network create autobox-net
    autobox run --env DOCKER_NETWORK=autobox-net
    ```
 
 4. **Regular updates**: Keep the CLI and engine updated
+
    ```bash
    go install github.com/Autobox-AI/autobox-cli@latest
    docker pull autobox-engine:latest

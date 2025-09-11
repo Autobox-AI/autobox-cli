@@ -33,18 +33,18 @@ var runCmd = &cobra.Command{
 Examples:
   autobox run --config simulation.json --metrics metrics.json
   autobox run --image autobox-engine:v1.0 --name "test-simulation"
-  autobox run --env OPENAI_API_KEY=sk-... --volume ./configs:/app/configs`,
+  autobox run --env OPENAI_API_KEY=sk-... --volume ./config:/app/config`,
 	RunE: runSimulation,
 }
 
 func init() {
 	home, _ := os.UserHomeDir()
-	defaultVolume := fmt.Sprintf("%s/.autobox/configs:/app/configs", home)
+	defaultVolume := fmt.Sprintf("%s/.autobox/config:/app/config", home)
 
 	runCmd.Flags().StringVarP(&runImage, "image", "i", "autobox-engine:latest", "Docker image to use")
-	runCmd.Flags().StringVarP(&runConfig, "config", "c", "/app/configs/simulation.json", "Path to simulation config file")
-	runCmd.Flags().StringVarP(&runMetricsPath, "metrics", "m", "/app/configs/metrics.json", "Path to metrics config file")
-	runCmd.Flags().StringVarP(&runServer, "server", "s", "/app/configs/server.json", "Path to server config file")
+	runCmd.Flags().StringVarP(&runConfig, "config", "c", "/app/config/simulation.json", "Path to simulation config file")
+	runCmd.Flags().StringVarP(&runMetricsPath, "metrics", "m", "/app/config/metrics.json", "Path to metrics config file")
+	runCmd.Flags().StringVarP(&runServer, "server", "s", "/app/config/server.json", "Path to server config file")
 	runCmd.Flags().StringSliceVarP(&runVolumes, "volume", "V", []string{defaultVolume}, "Volume mounts (format: host:container)")
 	runCmd.Flags().StringSliceVarP(&runEnv, "env", "e", []string{}, "Environment variables (format: KEY=VALUE)")
 	runCmd.Flags().StringVarP(&runName, "name", "n", "", "Simulation name")
@@ -68,19 +68,15 @@ func runSimulation(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	// runName will be set later after reading config
-
-	// If using default volume (not explicitly overridden), ensure directories exist
 	home, _ := os.UserHomeDir()
-	defaultVolume := fmt.Sprintf("%s/.autobox/configs:/app/configs", home)
+	defaultVolume := fmt.Sprintf("%s/.autobox/config:/app/config", home)
 
 	if len(runVolumes) == 1 && runVolumes[0] == defaultVolume {
-		// Using default volume, ensure directories exist
 		configDirs := []string{
-			filepath.Join(home, ".autobox", "configs"),
-			filepath.Join(home, ".autobox", "configs", "simulations"),
-			filepath.Join(home, ".autobox", "configs", "metrics"),
-			filepath.Join(home, ".autobox", "configs", "server"),
+			filepath.Join(home, ".autobox", "config"),
+			filepath.Join(home, ".autobox", "config", "simulations"),
+			filepath.Join(home, ".autobox", "config", "metrics"),
+			filepath.Join(home, ".autobox", "config", "server"),
 			filepath.Join(home, ".autobox", "logs"),
 		}
 
@@ -90,8 +86,7 @@ func runSimulation(cmd *cobra.Command, args []string) error {
 			}
 		}
 
-		// Create default config files if they don't exist
-		simulationFile := filepath.Join(home, ".autobox", "configs", "simulation.json")
+		simulationFile := filepath.Join(home, ".autobox", "config", "simulation.json")
 		if _, err := os.Stat(simulationFile); os.IsNotExist(err) {
 			defaultSimConfig := `{
   "name": "default-simulation",
@@ -104,7 +99,7 @@ func runSimulation(cmd *cobra.Command, args []string) error {
 			}
 		}
 
-		metricsFile := filepath.Join(home, ".autobox", "configs", "metrics.json")
+		metricsFile := filepath.Join(home, ".autobox", "config", "metrics.json")
 		if _, err := os.Stat(metricsFile); os.IsNotExist(err) {
 			defaultMetricsConfig := `{
   "enabled": true,
@@ -117,20 +112,16 @@ func runSimulation(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	// Handle empty volume flag (user wants no volumes)
 	volumes := runVolumes
 	if len(volumes) == 1 && volumes[0] == "" {
 		volumes = []string{}
 	}
 
-	// Read simulation name from config file
 	simName := ""
 	if runConfig != "" {
-		// Check if config file is in the container or on host
 		configPath := runConfig
-		if strings.HasPrefix(runConfig, "/app/configs/") {
-			// Config is in container, map to host path
-			configPath = filepath.Join(home, ".autobox", "configs", filepath.Base(runConfig))
+		if strings.HasPrefix(runConfig, "/app/config/") {
+			configPath = filepath.Join(home, ".autobox", "config", filepath.Base(runConfig))
 		}
 
 		// Try to read the config file
@@ -144,11 +135,10 @@ func runSimulation(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	// Use provided name (from --name flag) or extracted name from config or default
 	if runName != "" {
-		simName = runName // User explicitly provided a name via --name flag
+		simName = runName
 	} else if simName == "" {
-		simName = fmt.Sprintf("simulation-%d", os.Getpid()) // fallback to default if no name found
+		simName = fmt.Sprintf("simulation-%d", os.Getpid())
 	}
 
 	simConfig := models.SimulationConfig{
