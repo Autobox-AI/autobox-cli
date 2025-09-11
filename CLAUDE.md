@@ -85,3 +85,51 @@ The CLI acts as a Docker client that manages containers running the Autobox Engi
 4. **Label Convention**: Use `com.autobox.*` labels for all simulation metadata
 5. **Configuration**: Support both file and environment variable configuration via Viper
 6. **Output Consistency**: Use `cmd/output.go` utilities for all formatted output
+
+## Code Style Guidelines
+
+### Comments and Documentation
+
+**AVOID redundant and meaningless comments:**
+```go
+// BAD - States the obvious
+i++ // Increment i
+name := "John" // Set name to John
+if err != nil { // Check if error is not nil
+    return err // Return the error
+}
+
+// GOOD - Explains WHY, not WHAT
+i++ // Skip header row in CSV processing
+name := "John" // Default name when user profile is incomplete
+if err != nil { // Docker connection failures are recoverable
+    return err
+}
+```
+
+**Write meaningful comments only when necessary:**
+- Explain complex business logic or algorithms
+- Document non-obvious design decisions
+- Clarify workarounds or temporary solutions
+- Add context for external API quirks or limitations
+- Use function/method documentation for exported functions
+
+**Focus on clear, self-documenting code:**
+```go
+// BAD - Needs comment to understand
+func proc(d []byte) error {
+    // Process the data
+    // ...
+}
+
+// GOOD - Self-explanatory
+func validateSimulationConfig(configData []byte) error {
+    // ...
+}
+```
+
+**Keep comments concise and relevant:**
+- If code is clear, no comment is needed
+- Update or remove comments when code changes
+- Avoid commenting out code - use version control instead
+- Don't state what the code already clearly expresses

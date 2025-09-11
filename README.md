@@ -8,14 +8,16 @@ A powerful command-line interface for managing Autobox AI simulation containers.
 
 ## Features
 
-- 🚀 **Run** new simulations with custom configurations
+- 🚀 **Run** new simulations with custom configurations or by name
 - 📊 **Monitor** simulation status and metrics in real-time
 - 📋 **List** all running simulations
 - 📈 **Collect metrics** including CPU, memory, network, and disk I/O
 - 📝 **View logs** from simulation containers
 - 🛑 **Stop** running simulations gracefully
+- 🗑️ **Terminate** and remove simulation containers completely
 - 🎨 **Multiple output formats**: table, JSON, YAML
 - ⚙️ **Configuration management** via YAML files and environment variables
+- 📦 **Named simulations** with pre-configured settings
 
 ## Prerequisites
 
@@ -76,17 +78,20 @@ sudo mv autobox /usr/local/bin/
 cd ../autobox-engine
 docker build -t autobox-engine:latest .
 
-# 2. Run your first simulation
-autobox run --name "my-first-simulation"
+# 2. List available pre-configured simulations
+autobox run --list
 
-# 3. Check the status
-autobox status <container-id>
+# 3. Run a named simulation
+autobox run gift_choice
 
-# 4. View metrics
+# 4. Check simulation status
+autobox list
+
+# 5. View metrics
 autobox metrics <container-id>
 
-# 5. List all simulations
-autobox list
+# 6. Terminate simulation when done
+autobox terminate <container-id>
 ```
 
 ## Usage
@@ -94,8 +99,12 @@ autobox list
 ### Run a Simulation
 
 ```bash
-# Basic run with defaults
-autobox run
+# List available pre-configured simulations
+autobox run --list
+
+# Run a named simulation (loads configs from ~/.autobox/config/)
+autobox run gift_choice
+autobox run holiday_planning
 
 # Run with custom configuration files
 autobox run --config simulation.json --metrics metrics.json

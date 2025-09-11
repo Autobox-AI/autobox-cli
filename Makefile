@@ -42,9 +42,9 @@ test-coverage:
 	@echo "Coverage report generated at coverage.html"
 
 ## install: Install the binary to GOPATH/bin
-install:
+install: build
 	@echo "Installing ${BINARY_NAME}..."
-	@go install ${LDFLAGS} ${MAIN_PATH}
+	@cp ${BUILD_DIR}/${BINARY_NAME} $$(go env GOPATH)/bin/${BINARY_NAME}
 	@echo "Installed to $$(go env GOPATH)/bin/${BINARY_NAME}"
 
 ## clean: Clean build artifacts

@@ -39,8 +39,8 @@ func (c *Client) Close() error {
 
 func (c *Client) LaunchSimulation(ctx context.Context, config models.SimulationConfig) (*models.Simulation, error) {
 	labels := map[string]string{
-		fmt.Sprintf("%s.simulation", AutoboxLabelPrefix): "true",
-		fmt.Sprintf("%s.name", AutoboxLabelPrefix):       config.Name,
+		fmt.Sprintf("%s.simulation", AutoboxLabelPrefix):  "true",
+		fmt.Sprintf("%s.name", AutoboxLabelPrefix):        config.Name,
 		fmt.Sprintf("%s.config_path", AutoboxLabelPrefix): config.ConfigPath,
 		fmt.Sprintf("%s.created_at", AutoboxLabelPrefix):  time.Now().Format(time.RFC3339),
 	}
@@ -57,8 +57,8 @@ func (c *Client) LaunchSimulation(ctx context.Context, config models.SimulationC
 	}
 
 	hostConfig := &container.HostConfig{
-		Binds:       config.Volumes,
-		AutoRemove:  false,
+		Binds:      config.Volumes,
+		AutoRemove: false,
 		RestartPolicy: container.RestartPolicy{
 			Name: "no",
 		},
@@ -139,11 +139,32 @@ func (c *Client) StopSimulation(ctx context.Context, simulationID string) error 
 	stopOptions := container.StopOptions{
 		Timeout: &timeout,
 	}
-	
+
 	if err := c.cli.ContainerStop(ctx, simulationID, stopOptions); err != nil {
 		return fmt.Errorf("failed to stop container: %w", err)
 	}
-	
+
+	return nil
+}
+
+func (c *Client) RemoveSimulation(ctx context.Context, simulationID string, force bool) error {
+	if force {
+		timeout := 10
+		stopOptions := container.StopOptions{
+			Timeout: &timeout,
+		}
+		_ = c.cli.ContainerStop(ctx, simulationID, stopOptions)
+	}
+
+	removeOptions := container.RemoveOptions{
+		Force:         force,
+		RemoveVolumes: true,
+	}
+
+	if err := c.cli.ContainerRemove(ctx, simulationID, removeOptions); err != nil {
+		return fmt.Errorf("failed to remove container: %w", err)
+	}
+
 	return nil
 }
 
@@ -273,9 +294,9 @@ func (c *Client) statsToMetrics(stats container.StatsResponse) *models.Metrics {
 		CPUUsage:    cpuPercent,
 		MemoryUsage: memoryPercent,
 		NetworkIO: models.NetworkStats{
-			BytesReceived:    stats.Networks["eth0"].RxBytes,
-			BytesTransmitted: stats.Networks["eth0"].TxBytes,
-			PacketsReceived:  stats.Networks["eth0"].RxPackets,
+			BytesReceived:      stats.Networks["eth0"].RxBytes,
+			BytesTransmitted:   stats.Networks["eth0"].TxBytes,
+			PacketsReceived:    stats.Networks["eth0"].RxPackets,
 			PacketsTransmitted: stats.Networks["eth0"].TxPackets,
 		},
 		DiskIO: models.DiskStats{

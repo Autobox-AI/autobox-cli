@@ -56,5 +56,6 @@ func addCommands() {
 	rootCmd.AddCommand(metricsCmd)
 	rootCmd.AddCommand(logsCmd)
 	rootCmd.AddCommand(stopCmd)
+	rootCmd.AddCommand(terminateCmd)
 	rootCmd.AddCommand(versionCmd)
 }
