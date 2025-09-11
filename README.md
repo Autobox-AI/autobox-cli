@@ -1,5 +1,9 @@
 # Autobox CLI
 
+[![Tests](https://github.com/Autobox-AI/autobox-cli/actions/workflows/tests.yml/badge.svg?branch=main)](https://github.com/Autobox-AI/autobox-cli/actions/workflows/tests.yml)
+[![codecov](https://codecov.io/gh/Autobox-AI/autobox-cli/branch/main/graph/badge.svg)](https://codecov.io/gh/Autobox-AI/autobox-cli)
+[![Go 1.21+](https://img.shields.io/badge/go-1.21+-blue.svg)](https://go.dev/dl/)
+
 A powerful command-line interface for managing Autobox AI simulation containers. Built with Go, Cobra, and Viper for a robust, scalable, and user-friendly CLI experience.
 
 ## Features
