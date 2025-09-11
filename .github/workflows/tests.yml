@@ -39,7 +39,7 @@ jobs:
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v4
       with:
-        token: ${{ secrets.CODECOV_TOKEN }}
+        token: ${{ secrets.CODECOV_TOKEN }}  # Optional for public repos, but improves reliability
         file: ./coverage.out
         flags: unittests
         name: codecov-umbrella
