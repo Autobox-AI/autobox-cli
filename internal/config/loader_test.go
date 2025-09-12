@@ -54,7 +54,7 @@ func TestLoadSimulationConfig(t *testing.T) {
 		"port": 8080,
 	}
 	serverData, _ := json.Marshal(serverConfig)
-	if err := os.WriteFile(filepath.Join(configBase, "default.json"), serverData, 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(configBase, "server.json"), serverData, 0644); err != nil {
 		t.Fatalf("Failed to write server config: %v", err)
 	}
 

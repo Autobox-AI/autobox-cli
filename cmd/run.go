@@ -69,7 +69,6 @@ func init() {
 }
 
 func runSimulation(cmd *cobra.Command, args []string) error {
-	// Handle --list flag
 	if runListSims {
 		simulations, err := config.ListAvailableSimulations()
 		if err != nil {
@@ -125,7 +124,7 @@ func runSimulation(cmd *cobra.Command, args []string) error {
 		metricsPath = "/app/config/metrics/" + filepath.Base(configSet.MetricsPath)
 
 		if configSet.ServerPath != "" {
-			serverPath = "/app/config/default.json"
+			serverPath = "/app/config/server.json"
 		}
 
 		fmt.Printf("%s Loading simulation '%s'...\n", color.YellowString("→"), simulationName)
@@ -175,7 +174,7 @@ func runSimulation(cmd *cobra.Command, args []string) error {
 		if runServer != "" {
 			serverPath = runServer
 		} else {
-			serverPath = "/app/config/default.json"
+			serverPath = "/app/config/server.json"
 		}
 
 		if configPath != "" && simName == "" {

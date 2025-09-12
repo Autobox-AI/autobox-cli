@@ -63,7 +63,7 @@ func LoadSimulationConfig(simulationName string) (*SimulationConfigSet, error) {
 		configSet.Metrics = metricsInterface
 	}
 
-	serverPath := filepath.Join(configBase, "default.json")
+	serverPath := filepath.Join(configBase, "server.json")
 	if _, err := os.Stat(serverPath); os.IsNotExist(err) {
 		serverPath = filepath.Join(configBase, "server.json")
 	}
