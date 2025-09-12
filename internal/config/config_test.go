@@ -29,7 +29,6 @@ func TestSetDefaults(t *testing.T) {
 }
 
 func TestInit(t *testing.T) {
-	// Set up test environment
 	os.Setenv("AUTOBOX_DOCKER_HOST", "tcp://localhost:2375")
 	defer os.Unsetenv("AUTOBOX_DOCKER_HOST")
 
@@ -39,7 +38,6 @@ func TestInit(t *testing.T) {
 		t.Fatalf("Init() error = %v", err)
 	}
 
-	// Check that environment variable overrides default
 	if viper.GetString("docker.host") != "tcp://localhost:2375" {
 		t.Errorf("docker.host: got %s, want tcp://localhost:2375", viper.GetString("docker.host"))
 	}

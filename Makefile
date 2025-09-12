@@ -20,7 +20,7 @@ all: build
 ## help: Display this help message
 help:
 	@echo "Available targets:"
-	@grep -E '^##' $(MAKEFILE_LIST) | sed 's/^## //'
+	@grep -E '^##' $(MAKEFILE_LIST) | sed 's/^## //' | sort
 
 ## build: Build the binary
 build:
@@ -45,6 +45,11 @@ test-coverage:
 install: build
 	@echo "Installing ${BINARY_NAME}..."
 	@cp ${BUILD_DIR}/${BINARY_NAME} $$(go env GOPATH)/bin/${BINARY_NAME}
+	@# Re-sign the binary to avoid macOS security issues
+	@if [ "$$(uname)" = "Darwin" ]; then \
+		echo "Re-signing binary for macOS..."; \
+		codesign --force --deep --sign - $$(go env GOPATH)/bin/${BINARY_NAME}; \
+	fi
 	@echo "Installed to $$(go env GOPATH)/bin/${BINARY_NAME}"
 
 ## clean: Clean build artifacts
@@ -85,6 +90,10 @@ docker-build:
 	@echo "Building autobox-engine Docker image..."
 	@cd ../autobox-engine && docker build -t autobox-engine:latest .
 	@echo "Docker image built: autobox-engine:latest"
+
+## reinstall: Clean, build and install in one command
+reinstall: clean build install
+	@echo "Reinstall complete!"
 
 ## release: Build release binaries for multiple platforms
 release:

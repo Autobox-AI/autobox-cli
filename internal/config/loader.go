@@ -14,7 +14,7 @@ type SimulationConfigSet struct {
 	MetricsPath    string                 `json:"metrics_path"`
 	ServerPath     string                 `json:"server_path"`
 	Simulation     map[string]interface{} `json:"simulation"`
-	Metrics        interface{}            `json:"metrics"` // Can be map or array
+	Metrics        interface{}            `json:"metrics"`
 	Server         map[string]interface{} `json:"server"`
 }
 

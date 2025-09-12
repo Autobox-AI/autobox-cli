@@ -264,17 +264,4 @@ func followLogs(ctx context.Context, client *docker.Client, containerID string) 
 	return nil
 }
 
-func colorizeStatus(status models.SimulationStatus) string {
-	switch status {
-	case models.StatusRunning:
-		return color.GreenString(string(status))
-	case models.StatusCompleted:
-		return color.BlueString(string(status))
-	case models.StatusFailed:
-		return color.RedString(string(status))
-	case models.StatusStopped:
-		return color.YellowString(string(status))
-	default:
-		return string(status)
-	}
-}
+

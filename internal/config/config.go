@@ -82,7 +82,6 @@ func setDefaults() {
 	viper.SetDefault("docker.tls_verify", false)
 	viper.SetDefault("docker.image", "autobox-engine:latest")
 
-	// Get home directory for default paths
 	home, _ := os.UserHomeDir()
 	defaultConfigDir := filepath.Join(home, ".autobox", "config")
 

@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"os"
 
+	"github.com/Autobox-AI/autobox-cli/pkg/models"
+	"github.com/fatih/color"
 	"gopkg.in/yaml.v3"
 )
 
@@ -24,4 +26,19 @@ func truncate(s string, max int) string {
 		return s
 	}
 	return s[:max-3] + "..."
+}
+
+func colorizeStatus(status models.SimulationStatus) string {
+	switch status {
+	case models.StatusRunning:
+		return color.GreenString(string(status))
+	case models.StatusCompleted:
+		return color.BlueString(string(status))
+	case models.StatusFailed:
+		return color.RedString(string(status))
+	case models.StatusStopped:
+		return color.YellowString(string(status))
+	default:
+		return string(status)
+	}
 }
