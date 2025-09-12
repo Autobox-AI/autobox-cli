@@ -190,6 +190,23 @@ func (c *Client) GetSimulationLogs(ctx context.Context, simulationID string, tai
 	return string(logs), nil
 }
 
+func (c *Client) GetSimulationLogsStream(ctx context.Context, simulationID string, tail int) (io.ReadCloser, error) {
+	options := container.LogsOptions{
+		ShowStdout: true,
+		ShowStderr: true,
+		Timestamps: true,
+		Follow:     true,
+		Tail:       fmt.Sprintf("%d", tail),
+	}
+
+	reader, err := c.cli.ContainerLogs(ctx, simulationID, options)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get container logs: %w", err)
+	}
+
+	return reader, nil
+}
+
 func (c *Client) mapToEnvSlice(envMap map[string]string) []string {
 	env := make([]string, 0, len(envMap))
 	for k, v := range envMap {
