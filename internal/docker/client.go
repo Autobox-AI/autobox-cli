@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"net/http"
 	"strings"
 	"time"
 
@@ -13,6 +14,7 @@ import (
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/filters"
 	"github.com/docker/docker/client"
+	"github.com/docker/go-connections/nat"
 )
 
 const (
@@ -37,6 +39,18 @@ func (c *Client) Close() error {
 	return c.cli.Close()
 }
 
+func (c *Client) getServerPort(serverPath string) (string, error) {
+	// Default port used by autobox-engine
+	defaultPort := "9000"
+
+	// Note: serverPath is typically a container path like /app/config/server.json
+	// We would need the actual host path to read it, which would require parsing
+	// the volume mounts. For now, use the default port.
+	// TODO: Parse volume mounts to find the actual host path
+
+	return defaultPort, nil
+}
+
 func (c *Client) LaunchSimulation(ctx context.Context, config models.SimulationConfig) (*models.Simulation, error) {
 	labels := map[string]string{
 		fmt.Sprintf("%s.simulation", AutoboxLabelPrefix):  "true",
@@ -45,10 +59,16 @@ func (c *Client) LaunchSimulation(ctx context.Context, config models.SimulationC
 		fmt.Sprintf("%s.created_at", AutoboxLabelPrefix):  time.Now().Format(time.RFC3339),
 	}
 
+	serverPort, _ := c.getServerPort(config.ServerPath)
+	exposedPort := nat.Port(fmt.Sprintf("%s/tcp", serverPort))
+
 	containerConfig := &container.Config{
 		Image:  config.Image,
 		Labels: labels,
 		Env:    c.mapToEnvSlice(config.Environment),
+		ExposedPorts: nat.PortSet{
+			exposedPort: struct{}{},
+		},
 		Cmd: []string{
 			"--config", config.ConfigPath,
 			"--metrics", config.MetricsPath,
@@ -59,6 +79,14 @@ func (c *Client) LaunchSimulation(ctx context.Context, config models.SimulationC
 	hostConfig := &container.HostConfig{
 		Binds:      config.Volumes,
 		AutoRemove: false,
+		PortBindings: nat.PortMap{
+			exposedPort: []nat.PortBinding{
+				{
+					HostIP:   "0.0.0.0",
+					HostPort: "0", // Let Docker assign a random port
+				},
+			},
+		},
 		RestartPolicy: container.RestartPolicy{
 			Name: "no",
 		},
@@ -94,6 +122,13 @@ func (c *Client) GetSimulationStatus(ctx context.Context, simulationID string) (
 	}
 
 	simulation := c.containerToSimulation(containerJSON)
+
+	if simulation.Status == models.StatusRunning {
+		if status, err := c.getHTTPStatus(ctx, containerJSON); err == nil {
+			simulation.Status = status
+		}
+	}
+
 	return simulation, nil
 }
 
@@ -274,6 +309,61 @@ func (c *Client) containerStateToStatus(state *types.ContainerState) models.Simu
 		return models.StatusFailed
 	default:
 		return models.StatusPending
+	}
+}
+func (c *Client) getHTTPStatus(ctx context.Context, container types.ContainerJSON) (models.SimulationStatus, error) {
+	var hostPort string
+
+	if ports, ok := container.NetworkSettings.Ports["9000/tcp"]; ok && len(ports) > 0 {
+		hostPort = ports[0].HostPort
+	} else if ports, ok := container.NetworkSettings.Ports["8080/tcp"]; ok && len(ports) > 0 {
+		hostPort = ports[0].HostPort
+	} else {
+		return models.StatusRunning, fmt.Errorf("no exposed ports found")
+	}
+
+	if hostPort == "" {
+		return models.StatusRunning, fmt.Errorf("host port not assigned")
+	}
+
+	url := fmt.Sprintf("http://localhost:%s/status", hostPort)
+	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
+	if err != nil {
+		return models.StatusRunning, err
+	}
+
+	client := &http.Client{Timeout: 2 * time.Second}
+	resp, err := client.Do(req)
+	if err != nil {
+		return models.StatusRunning, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return models.StatusRunning, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+	}
+
+	var statusResponse struct {
+		Status string `json:"status"`
+	}
+
+	if err := json.NewDecoder(resp.Body).Decode(&statusResponse); err != nil {
+		return models.StatusRunning, err
+	}
+
+	switch strings.ToLower(statusResponse.Status) {
+	case "completed", "complete", "finished":
+		return models.StatusCompleted, nil
+	case "failed", "error":
+		return models.StatusFailed, nil
+	case "running", "active", "in_progress":
+		return models.StatusRunning, nil
+	case "stopped", "paused":
+		return models.StatusStopped, nil
+	case "pending", "waiting", "queued":
+		return models.StatusPending, nil
+	default:
+		return models.StatusRunning, nil
 	}
 }
 
