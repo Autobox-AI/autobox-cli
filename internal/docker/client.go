@@ -5,7 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -51,6 +53,17 @@ func (c *Client) getServerPort(serverPath string) (string, error) {
 	return defaultPort, nil
 }
 
+func (c *Client) findAvailablePort() (string, error) {
+	listener, err := net.Listen("tcp", ":0")
+	if err != nil {
+		return "", fmt.Errorf("failed to find available port: %w", err)
+	}
+	defer listener.Close()
+
+	addr := listener.Addr().(*net.TCPAddr)
+	return strconv.Itoa(addr.Port), nil
+}
+
 func (c *Client) LaunchSimulation(ctx context.Context, config models.SimulationConfig) (*models.Simulation, error) {
 	labels := map[string]string{
 		fmt.Sprintf("%s.simulation", AutoboxLabelPrefix):  "true",
@@ -62,10 +75,18 @@ func (c *Client) LaunchSimulation(ctx context.Context, config models.SimulationC
 	serverPort, _ := c.getServerPort(config.ServerPath)
 	exposedPort := nat.Port(fmt.Sprintf("%s/tcp", serverPort))
 
+	hostPort, err := c.findAvailablePort()
+	if err != nil {
+		return nil, fmt.Errorf("failed to find available port: %w", err)
+	}
+
+	envVars := c.mapToEnvSlice(config.Environment)
+	envVars = append(envVars, fmt.Sprintf("AUTOBOX_EXTERNAL_PORT=%s", hostPort))
+
 	containerConfig := &container.Config{
 		Image:  config.Image,
 		Labels: labels,
-		Env:    c.mapToEnvSlice(config.Environment),
+		Env:    envVars,
 		ExposedPorts: nat.PortSet{
 			exposedPort: struct{}{},
 		},
@@ -83,7 +104,7 @@ func (c *Client) LaunchSimulation(ctx context.Context, config models.SimulationC
 			exposedPort: []nat.PortBinding{
 				{
 					HostIP:   "0.0.0.0",
-					HostPort: "0", // Let Docker assign a random port
+					HostPort: hostPort,
 				},
 			},
 		},
